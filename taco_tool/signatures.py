@@ -130,57 +130,54 @@ def render_text_report(
     matched = [result for result in signature_results if result.matched]
     lines: list[str] = []
 
-    lines.append(f"Document: {input_markdown}")
-    lines.append(f"Signatures matched: {len(matched)}")
-
-    if not matched:
-        lines.append("Status: PASS (no suspect cohesion signatures matched)")
-    else:
-        lines.append("Status: SUSPECT (cohesion signatures matched)")
-
-    key_metrics = [
-        "word2vec_1_all_sent",
-        "lsa_1_all_sent",
-        "all_connective",
-        "adjacent_overlap_binary_argument_sent",
-        "adjacent_overlap_binary_noun_sent",
-        "noun_ttr",
-        "content_ttr",
-        "repeated_content_lemmas",
-        "syn_overlap_sent_noun",
-    ]
-
+    # ── Header ────────────────────────────────────────────────────────
+    status = "✗ SUSPECT" if matched else "✓ PASS"
+    lines.append(f"{status}  {input_markdown.name}  ({len(matched)} signature{'s' if len(matched) != 1 else ''} matched)")
     lines.append("")
-    lines.append("Key metrics:")
-    for metric in key_metrics:
-        value = metrics.get(metric)
+
+    # ── Key metrics (compact two-column) ──────────────────────────────
+    key_metrics = [
+        ("w2v", "word2vec_1_all_sent"),
+        ("lsa", "lsa_1_all_sent"),
+        ("conn", "all_connective"),
+        ("arg_ovlp", "adjacent_overlap_binary_argument_sent"),
+        ("n_ovlp", "adjacent_overlap_binary_noun_sent"),
+        ("n_ttr", "noun_ttr"),
+        ("c_ttr", "content_ttr"),
+        ("rpt_lem", "repeated_content_lemmas"),
+        ("syn_n", "syn_overlap_sent_noun"),
+    ]
+    metric_parts: list[str] = []
+    for short, full in key_metrics:
+        value = metrics.get(full)
         if isinstance(value, float):
-            lines.append(f"  - {metric}: {value:.6f}")
-
-    if matched:
+            metric_parts.append(f"{short}={value:.3f}")
+    if metric_parts:
+        # Print metrics in rows of 5
+        for i in range(0, len(metric_parts), 5):
+            lines.append("  " + "  ".join(metric_parts[i:i + 5]))
         lines.append("")
-        lines.append("Detected signatures:")
-        for sig in matched:
-            lines.append(f"  - [{sig.severity.upper()}] {sig.title} ({sig.signature_id})")
-            lines.append(f"    {sig.description}")
-            for rule in sig.rules:
-                actual = "missing" if rule.actual is None else f"{rule.actual:.6f}"
-                mark = "match" if rule.passed else "no-match"
-                lines.append(
-                    f"    * {rule.metric} {rule.op} {rule.expected:.6f} | actual={actual} | {mark}"
-                )
-                if rule.passed and rule.why:
-                    lines.append(f"      why: {rule.why}")
 
+    # ── Matched signatures ────────────────────────────────────────────
+    if matched:
+        for sig in matched:
+            sev_icon = "🔴" if sig.severity == "high" else "🟡" if sig.severity == "medium" else "⚪"
+            lines.append(f"{sev_icon} {sig.title}")
+            lines.append(f"  {sig.description}")
+            for rule in sig.rules:
+                actual = "—" if rule.actual is None else f"{rule.actual:.3f}"
+                mark = "✓" if rule.passed else "·"
+                lines.append(f"  {mark} {rule.metric} {rule.op} {rule.expected:.3f}  (actual {actual})")
+            lines.append("")
+
+        # ── Fixes (deduplicated, numbered) ────────────────────────────
         fixes: list[str] = []
         for sig in matched:
             for rule in sig.rules:
                 if rule.passed and rule.fix and rule.fix not in fixes:
                     fixes.append(rule.fix)
-
         if fixes:
-            lines.append("")
-            lines.append("Recommended corrections:")
+            lines.append("Fixes:")
             for idx, fix in enumerate(fixes, start=1):
                 lines.append(f"  {idx}. {fix}")
 

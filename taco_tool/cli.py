@@ -178,7 +178,7 @@ def cmd_analyze_or_lint(args: argparse.Namespace, lint_mode: bool) -> int:
         "metrics": analysis.metrics,
         "signatures": [_signature_to_json(item) for item in signature_results],
     }
-    _render_payload(args, payload, f"{text_report}\n\nCSV: {analysis.csv_path}")
+    _render_payload(args, payload, text_report)
 
     if lint_mode:
         fail_on = {item.strip().lower() for item in args.fail_on.split(",") if item.strip()}

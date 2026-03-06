@@ -201,13 +201,21 @@ def run_analysis(
         try:
             os.chdir(chosen_data_dir)
             os.environ["TACO_DATA_DIR"] = str(chosen_data_dir)
-            run_taaco(
-                str(tmp_input_dir),
-                str(out_csv_path),
-                dict(PROFILE_OPTIONS[profile]),
-                gui=False,
-                source_text="",
-            )
+            # Suppress noisy stdout from TAACOnoGUI (Loading Spacy,
+            # Loading vector spaces, processing N of M files, etc.)
+            _real_stdout = sys.stdout
+            sys.stdout = open(os.devnull, "w")
+            try:
+                run_taaco(
+                    str(tmp_input_dir),
+                    str(out_csv_path),
+                    dict(PROFILE_OPTIONS[profile]),
+                    gui=False,
+                    source_text="",
+                )
+            finally:
+                sys.stdout.close()
+                sys.stdout = _real_stdout
         except Exception as exc:
             message = str(exc)
             if "en_core_web_sm" in message or "Can't find model" in message:
