@@ -75,3 +75,47 @@ Source overlap indices are used for integrated production tasks (e.g., read-writ
 TAACO is available for use under a Creative Commons Attribution-NonCommercial-Sharealike license (4.0)
 
 For a summary of this license (and a link to the full license) <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">click here</a>.
+## TACO CLI (single-document cohesion lint)
+This repository now includes a CLI named `taco` for single-document markdown analysis and signature-based suspect cohesion detection.
+
+### Local setup
+```terminal
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -e .
+python -m spacy download en_core_web_sm
+```
+
+### Analyze one markdown file
+```terminal
+taco analyze /path/to/spec.md --profile signature
+```
+
+### Lint mode (non-zero exit on suspect signatures)
+```terminal
+taco lint /path/to/spec.md
+```
+
+### Install pre-commit hook
+```terminal
+./scripts/install_precommit_hook.sh
+```
+
+### Build + install local Homebrew formula
+This uses PyInstaller (instead of PyOxidizer) to produce a single binary and installs data files under `share/taco`.
+```terminal
+./scripts/build_install_homebrew.sh
+```
+
+The installed binary reports build metadata:
+```terminal
+taco --version
+# taco <git-describe-version> (<short-commit[-dirty]>)
+```
+
+### Signature library
+Signatures are defined in:
+- `taco_tool/signature_data/cohesion_signatures.json`
+
+The library currently includes a discovered high-risk jargon signature (`jargon_spray_sparse_local_cohesion_v1`) and related patterns.

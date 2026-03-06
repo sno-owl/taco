@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "description": "Cohesion and coherence signatures for suspicious pseudo-profound prose.",
+  "signatures": [
+    {
+      "id": "jargon_spray_sparse_local_cohesion_v1",
+      "title": "Jargon spray with weak local cohesion",
+      "severity": "high",
+      "logic": "all",
+      "description": "The document introduces many unique concept words while failing to reuse or bridge them across adjacent sentences.",
+      "rules": [
+        {
+          "metric": "noun_ttr",
+          "operator": ">=",
+          "value": 0.8,
+          "why": "Most nouns are one-off terms, which suggests topic churn rather than progressive explanation.",
+          "fix": "Reuse 3-5 anchor nouns across neighboring sentences so each paragraph develops stable concepts."
+        },
+        {
+          "metric": "content_ttr",
+          "operator": ">=",
+          "value": 0.8,
+          "why": "Content vocabulary is highly novel sentence to sentence, often seen in polished-sounding but thin text.",
+          "fix": "Consolidate terminology and remove near-synonymous buzzwords that do not add new meaning."
+        },
+        {
+          "metric": "adjacent_overlap_binary_noun_sent",
+          "operator": "<=",
+          "value": 0.05,
+          "why": "Adjacent sentences rarely share noun concepts, indicating poor local chaining.",
+          "fix": "Add explicit cross-sentence bridges by repeating key entities and referring back to prior claims."
+        },
+        {
+          "metric": "repeated_content_lemmas",
+          "operator": "<=",
+          "value": 0.2,
+          "why": "Core content terms are not repeated enough to form a coherent thread.",
+          "fix": "Revisit each section and deliberately restate central terms when introducing implications or constraints."
+        },
+        {
+          "metric": "syn_overlap_sent_noun",
+          "operator": "<=",
+          "value": 0.1,
+          "why": "Even synonym-level noun continuity is low, reinforcing the sparse cohesion signal.",
+          "fix": "Keep semantic neighborhoods tight: define canonical terms and avoid constant conceptual relabeling."
+        }
+      ]
+    },
+    {
+      "id": "floating_claims_low_logic_links_v1",
+      "title": "Floating claims with weak logical linkage",
+      "severity": "medium",
+      "logic": "all",
+      "description": "Claims appear semantically disconnected and under-signaled by logical or causal connectives.",
+      "rules": [
+        {
+          "metric": "all_connective",
+          "operator": "<=",
+          "value": 0.015,
+          "why": "Low connective density often indicates isolated assertions instead of reasoned progression.",
+          "fix": "Introduce explicit causal and contrastive relations (because, therefore, however, for example)."
+        },
+        {
+          "metric": "word2vec_1_all_sent",
+          "operator": "<=",
+          "value": 0.35,
+          "why": "Adjacent sentences have low semantic continuity in vector space.",
+          "fix": "Rewrite transitions so each sentence explicitly builds on the previous sentence's meaning."
+        },
+        {
+          "metric": "adjacent_overlap_binary_argument_sent",
+          "operator": "<=",
+          "value": 0.25,
+          "why": "Arguments (noun/pronoun carriers) are not sustained across sentence boundaries.",
+          "fix": "Carry forward actors and objects across 2-3 sentences before introducing new entities."
+        }
+      ]
+    },
+    {
+      "id": "semantic_veneer_no_lexical_thread_v1",
+      "title": "Semantic veneer without lexical thread",
+      "severity": "high",
+      "logic": "all",
+      "description": "The text can look semantically smooth in embeddings while lacking concrete lexical continuity.",
+      "rules": [
+        {
+          "metric": "word2vec_1_all_sent",
+          "operator": ">=",
+          "value": 0.7,
+          "why": "Global semantic vectors appear coherent.",
+          "fix": "Pair high-level abstraction with concrete repeated entities, constraints, and examples."
+        },
+        {
+          "metric": "noun_ttr",
+          "operator": ">=",
+          "value": 0.7,
+          "why": "Noun inventory is too novel for stable explanatory prose.",
+          "fix": "Reduce conceptual churn by defining a glossary and sticking to canonical nouns."
+        },
+        {
+          "metric": "adjacent_overlap_binary_noun_sent",
+          "operator": "<=",
+          "value": 0.1,
+          "why": "Local noun overlap is too weak for coherent paragraph flow.",
+          "fix": "Use sentence openers that reference the previous sentence's main entity."
+        },
+        {
+          "metric": "repeated_content_lemmas",
+          "operator": "<=",
+          "value": 0.25,
+          "why": "Low recurrence of content lemmas signals weak thematic anchoring.",
+          "fix": "Reinforce recurring claims with repeated terminology and explicit definitions."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+- id: taco-cohesion
+  name: taco cohesion lint
+  description: Analyze markdown cohesion and detect suspect pseudo-profound signatures.
+  entry: scripts/lint_markdown_taco.sh
+  language: system
+  files: \.md$
+  pass_filenames: true

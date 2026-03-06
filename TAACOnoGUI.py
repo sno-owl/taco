@@ -23,6 +23,9 @@ def runTAACO(indir, outdir, varDict, gui = False, source_text = False):
 		system = "L"
 
 	def resource_path(relative):
+		override_dir = os.environ.get("TACO_DATA_DIR")
+		if override_dir:
+			return(os.path.join(override_dir, relative))
 		if hasattr(sys, "_MEIPASS"):
 			return(os.path.join(sys._MEIPASS, relative))
 		return(os.path.join(relative))

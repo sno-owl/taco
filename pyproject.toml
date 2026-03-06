@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taco-cli"
+version = "0.1.0"
+description = "TAACO-based cohesion analyzer and markdown lint CLI"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "numpy>=1.26",
+  "spacy>=3.8,<3.9",
+  "chardet>=5.0,<6.0"
+]
+
+[project.scripts]
+taco = "taco_tool.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["taco_tool*"]
+
+[tool.setuptools.package-data]
+"taco_tool.signature_data" = ["*.json"]
