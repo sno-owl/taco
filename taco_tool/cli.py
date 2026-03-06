@@ -65,7 +65,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("input_markdown", help="Path to a single .md file")
+    common.add_argument("input_markdown", help="Path to a text file (.md, .txt, .rst, etc.)")
     common.add_argument(
         "--profile",
         default="signature",

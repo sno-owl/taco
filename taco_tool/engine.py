@@ -159,17 +159,15 @@ def _read_metrics(csv_path: Path) -> dict[str, Any]:
 
 
 def run_analysis(
-    input_markdown: str,
+    input_file: str,
     *,
     profile: str = "signature",
     output_csv: str | None = None,
     data_dir: str | None = None,
 ) -> AnalysisResult:
-    markdown_path = Path(input_markdown).expanduser().resolve()
-    if not markdown_path.exists():
-        raise FileNotFoundError(f"Input markdown does not exist: {markdown_path}")
-    if markdown_path.suffix.lower() != ".md":
-        raise ValueError(f"Input must be a .md file: {markdown_path}")
+    file_path = Path(input_file).expanduser().resolve()
+    if not file_path.exists():
+        raise FileNotFoundError(f"Input file does not exist: {file_path}")
 
     if profile not in PROFILE_OPTIONS:
         known = ", ".join(sorted(PROFILE_OPTIONS.keys()))
@@ -178,10 +176,14 @@ def run_analysis(
     chosen_data_dir = find_data_dir(data_dir)
     run_taaco = _load_run_taaco(chosen_data_dir)
 
-    raw_markdown = markdown_path.read_text(encoding="utf-8", errors="ignore")
-    plain_text = markdown_to_text(raw_markdown)
+    raw_text = file_path.read_text(encoding="utf-8", errors="ignore")
+    # Only strip markdown syntax for .md files; treat everything else as plain text.
+    if file_path.suffix.lower() == ".md":
+        plain_text = markdown_to_text(raw_text)
+    else:
+        plain_text = raw_text.strip()
     if not plain_text:
-        raise ValueError("Markdown content is empty after normalization.")
+        raise ValueError("File content is empty after normalization.")
 
     out_csv_path = Path(output_csv).expanduser().resolve() if output_csv else None
     if out_csv_path is not None:
@@ -190,7 +192,7 @@ def run_analysis(
     with tempfile.TemporaryDirectory(prefix="taco_single_doc_") as tmpdir:
         tmp_input_dir = Path(tmpdir) / "input"
         tmp_input_dir.mkdir(parents=True, exist_ok=True)
-        tmp_txt_path = tmp_input_dir / f"{markdown_path.stem}.txt"
+        tmp_txt_path = tmp_input_dir / f"{file_path.stem}.txt"
         tmp_txt_path.write_text(plain_text, encoding="utf-8")
 
         if out_csv_path is None:
@@ -241,7 +243,7 @@ def run_analysis(
             out_csv_path = persisted
 
     return AnalysisResult(
-        input_markdown=markdown_path,
+        input_markdown=file_path,
         csv_path=out_csv_path,
         profile=profile,
         metrics=metrics,
