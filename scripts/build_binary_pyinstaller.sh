@@ -48,7 +48,8 @@ python -m spacy download en_core_web_sm
 pyinstaller \
   --noconfirm \
   --clean \
-  --onefile \
+  --onedir \
+  --strip \
   --name taco \
   --paths "${ROOT_DIR}" \
   --collect-submodules taco_tool \
@@ -70,8 +71,8 @@ pyinstaller \
   --specpath "${WORK_DIR}" \
   "${ROOT_DIR}/scripts/taco_entrypoint.py"
 
-chmod +x "${DIST_DIR}/taco"
-echo "Built binary: ${DIST_DIR}/taco"
+chmod +x "${DIST_DIR}/taco/taco"
+echo "Built directory: ${DIST_DIR}/taco/"
 echo "Build version: ${VERSION}"
 echo "Build commit: ${COMMIT}"
 echo "Built at: ${BUILT_AT}"

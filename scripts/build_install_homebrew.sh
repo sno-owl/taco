@@ -57,14 +57,21 @@ else
   echo "No test files found. Skipping pytest."
 fi
 
-echo "[2/7] Build taco binary (PyInstaller)"
+echo "[2/7] Build taco binary (PyInstaller --onedir)"
 TACO_BUILD_VERSION="${VERSION}" TACO_BUILD_COMMIT="${COMMIT}" TACO_BUILD_AT="${BUILT_AT}" \
   ./scripts/build_binary_pyinstaller.sh
 
 echo "[3/7] Stage payload"
 rm -rf "${STAGE_DIR}"
-mkdir -p "${STAGE_DIR}/bin" "${STAGE_DIR}/share/taco"
-cp "${BUILD_DIR}/taco" "${STAGE_DIR}/bin/taco"
+mkdir -p "${STAGE_DIR}/bin" "${STAGE_DIR}/share/taco" "${STAGE_DIR}/libexec/taco"
+# PyInstaller --onedir output is at dist/build/taco/
+cp -a "${BUILD_DIR}/taco/." "${STAGE_DIR}/libexec/taco/"
+# Create a wrapper script that execs the real binary so Homebrew can symlink into bin/
+cat > "${STAGE_DIR}/bin/taco" <<'WRAPPER'
+#!/usr/bin/env bash
+exec "$(dirname "$0")/../libexec/taco/taco" "$@"
+WRAPPER
+chmod +x "${STAGE_DIR}/bin/taco"
 
 cp "${ROOT_DIR}/TAACOnoGUI.py" "${STAGE_DIR}/share/taco/"
 cp "${ROOT_DIR}/adj_lem_list.txt" "${STAGE_DIR}/share/taco/"
@@ -103,7 +110,8 @@ class Taco < Formula
   sha256 "${ARCHIVE_SHA}"
 
   def install
-    bin.install "bin/taco"
+    libexec.install Dir["libexec/taco/*"]
+    bin.write_exec_script libexec/"taco"
     (prefix/"share/taco").install Dir["share/taco/*"]
   end
 
