@@ -131,46 +131,53 @@ def render_text_report(
     lines: list[str] = []
 
     # ── Header ────────────────────────────────────────────────────────
-    status = "✗ SUSPECT" if matched else "✓ PASS"
-    lines.append(f"{status}  {input_markdown.name}  ({len(matched)} signature{'s' if len(matched) != 1 else ''} matched)")
+    if matched:
+        banner = f"✗ SUSPECT  {input_markdown.name}"
+        count = f"{len(matched)} signature{'s' if len(matched) != 1 else ''} matched"
+    else:
+        banner = f"✓ PASS     {input_markdown.name}"
+        count = "no signatures matched"
+    lines.append(banner)
+    lines.append(count)
     lines.append("")
 
-    # ── Key metrics (compact two-column) ──────────────────────────────
+    # ── Key metrics (aligned table) ───────────────────────────────────
     key_metrics = [
-        ("w2v", "word2vec_1_all_sent"),
-        ("lsa", "lsa_1_all_sent"),
-        ("conn", "all_connective"),
-        ("arg_ovlp", "adjacent_overlap_binary_argument_sent"),
-        ("n_ovlp", "adjacent_overlap_binary_noun_sent"),
-        ("n_ttr", "noun_ttr"),
-        ("c_ttr", "content_ttr"),
-        ("rpt_lem", "repeated_content_lemmas"),
-        ("syn_n", "syn_overlap_sent_noun"),
+        ("Word2Vec similarity", "word2vec_1_all_sent"),
+        ("LSA similarity",      "lsa_1_all_sent"),
+        ("Connectives",         "all_connective"),
+        ("Argument overlap",    "adjacent_overlap_binary_argument_sent"),
+        ("Noun overlap",        "adjacent_overlap_binary_noun_sent"),
+        ("Noun TTR",            "noun_ttr"),
+        ("Content TTR",         "content_ttr"),
+        ("Repeated lemmas",     "repeated_content_lemmas"),
+        ("Synonym overlap",     "syn_overlap_sent_noun"),
     ]
-    metric_parts: list[str] = []
-    for short, full in key_metrics:
+    label_width = max(len(label) for label, _ in key_metrics)
+    for label, full in key_metrics:
         value = metrics.get(full)
         if isinstance(value, float):
-            metric_parts.append(f"{short}={value:.3f}")
-    if metric_parts:
-        # Print metrics in rows of 5
-        for i in range(0, len(metric_parts), 5):
-            lines.append("  " + "  ".join(metric_parts[i:i + 5]))
-        lines.append("")
+            lines.append(f"  {label:<{label_width}}  {value:>7.3f}")
+    lines.append("")
 
     # ── Matched signatures ────────────────────────────────────────────
     if matched:
         for sig in matched:
-            sev_icon = "🔴" if sig.severity == "high" else "🟡" if sig.severity == "medium" else "⚪"
-            lines.append(f"{sev_icon} {sig.title}")
+            sev = "🔴" if sig.severity == "high" else "🟡" if sig.severity == "medium" else "⚪"
+            lines.append(f"{sev} {sig.title}")
             lines.append(f"  {sig.description}")
+            lines.append("")
+            # Align rule table
+            rule_label_w = max((len(r.metric) for r in sig.rules), default=0)
             for rule in sig.rules:
-                actual = "—" if rule.actual is None else f"{rule.actual:.3f}"
+                actual = "  —  " if rule.actual is None else f"{rule.actual:.3f}"
                 mark = "✓" if rule.passed else "·"
-                lines.append(f"  {mark} {rule.metric} {rule.op} {rule.expected:.3f}  (actual {actual})")
+                lines.append(
+                    f"    {mark} {rule.metric:<{rule_label_w}}  {rule.op:>2} {rule.expected:.3f}  →  {actual}"
+                )
             lines.append("")
 
-        # ── Fixes (deduplicated, numbered) ────────────────────────────
+        # ── Fixes ─────────────────────────────────────────────────────
         fixes: list[str] = []
         for sig in matched:
             for rule in sig.rules:
