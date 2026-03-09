@@ -10,7 +10,11 @@ from typing import Any
 
 from taco_tool.buildinfo import cli_version_string
 from taco_tool.engine import PROFILE_OPTIONS, find_data_dir, run_analysis
-from taco_tool.signatures import evaluate_signatures, load_signatures, render_text_report
+from taco_tool.signatures import (
+    evaluate_signatures,
+    load_signatures,
+    render_text_report,
+)
 
 try:
     from requests.exceptions import RequestsDependencyWarning
@@ -39,7 +43,9 @@ PRECOMMIT_SNIPPET = """repos:
 """
 
 
-class Formatter(argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
+class Formatter(
+    argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
+):
     pass
 
 
@@ -60,12 +66,16 @@ def _build_parser() -> argparse.ArgumentParser:
         epilog=EXAMPLES,
         formatter_class=Formatter,
     )
-    parser.add_argument("--version", action="version", version=cli_version_string("taco"))
+    parser.add_argument(
+        "--version", action="version", version=cli_version_string("taco")
+    )
 
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("input_markdown", help="Path to a text file (.md, .txt, .rst, etc.)")
+    common.add_argument(
+        "input_markdown", help="Path to a text file (.md, .txt, .rst, etc.)"
+    )
     common.add_argument(
         "--profile",
         default="signature",
@@ -76,7 +86,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--data-dir",
         help="Directory containing TAACOnoGUI.py and TAACO data files",
     )
-    common.add_argument("--signatures-file", help="Optional custom signatures JSON file")
+    common.add_argument(
+        "--signatures-file", help="Optional custom signatures JSON file"
+    )
     common.add_argument(
         "--format",
         choices=["text", "json"],
@@ -92,6 +104,12 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Analyze one markdown file and print a full cohesion report.",
     )
     analyze.add_argument("--csv-out", help="Optional path for TAACO output CSV")
+    analyze.add_argument(
+        "--numbers",
+        action="store_true",
+        default=False,
+        help=argparse.SUPPRESS,
+    )
 
     lint = sub.add_parser(
         "lint",
@@ -145,7 +163,9 @@ def cmd_signatures(args: argparse.Namespace) -> int:
     return 0
 
 
-def _render_payload(args: argparse.Namespace, payload: dict[str, Any], text_report: str) -> None:
+def _render_payload(
+    args: argparse.Namespace, payload: dict[str, Any], text_report: str
+) -> None:
     if args.format == "json":
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
@@ -167,7 +187,12 @@ def cmd_analyze_or_lint(args: argparse.Namespace, lint_mode: bool) -> int:
         return 1
 
     matched = [item for item in signature_results if item.matched]
-    text_report = render_text_report(analysis.input_markdown, analysis.metrics, signature_results)
+    text_report = render_text_report(
+        analysis.input_markdown,
+        analysis.metrics,
+        signature_results,
+        include_numbers=getattr(args, "numbers", False),
+    )
 
     payload = {
         "input_markdown": str(analysis.input_markdown),
@@ -181,7 +206,9 @@ def cmd_analyze_or_lint(args: argparse.Namespace, lint_mode: bool) -> int:
     _render_payload(args, payload, text_report)
 
     if lint_mode:
-        fail_on = {item.strip().lower() for item in args.fail_on.split(",") if item.strip()}
+        fail_on = {
+            item.strip().lower() for item in args.fail_on.split(",") if item.strip()
+        }
         if any(item.severity in fail_on for item in matched):
             return 2
     return 0
@@ -215,7 +242,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     except Exception as exc:
         errors.append(f"spaCy import failed: {exc}")
 
-    ok = all([checks["data_dir"], checks["taaco_module"], checks["spacy_import"], checks["spacy_model"]])
+    ok = all(
+        [
+            checks["data_dir"],
+            checks["taaco_module"],
+            checks["spacy_import"],
+            checks["spacy_model"],
+        ]
+    )
 
     if args.format == "json":
         print(json.dumps({"ok": ok, "checks": checks, "errors": errors}, indent=2))

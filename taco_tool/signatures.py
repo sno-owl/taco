@@ -53,7 +53,9 @@ def load_signatures(signatures_file: str | None = None) -> list[dict[str, Any]]:
 
     signatures = payload.get("signatures")
     if not isinstance(signatures, list):
-        raise ValueError("Invalid signatures payload: expected top-level 'signatures' list")
+        raise ValueError(
+            "Invalid signatures payload: expected top-level 'signatures' list"
+        )
     return signatures
 
 
@@ -126,6 +128,7 @@ def render_text_report(
     input_markdown: Path,
     metrics: dict[str, Any],
     signature_results: list[SignatureResult],
+    include_numbers: bool = False,
 ) -> str:
     matched = [result for result in signature_results if result.matched]
     lines: list[str] = []
@@ -141,41 +144,49 @@ def render_text_report(
     lines.append(count)
     lines.append("")
 
-    # ── Key metrics (aligned table) ───────────────────────────────────
-    key_metrics = [
-        ("Word2Vec similarity", "word2vec_1_all_sent"),
-        ("LSA similarity",      "lsa_1_all_sent"),
-        ("Connectives",         "all_connective"),
-        ("Argument overlap",    "adjacent_overlap_binary_argument_sent"),
-        ("Noun overlap",        "adjacent_overlap_binary_noun_sent"),
-        ("Noun TTR",            "noun_ttr"),
-        ("Content TTR",         "content_ttr"),
-        ("Repeated lemmas",     "repeated_content_lemmas"),
-        ("Synonym overlap",     "syn_overlap_sent_noun"),
-    ]
-    label_width = max(len(label) for label, _ in key_metrics)
-    for label, full in key_metrics:
-        value = metrics.get(full)
-        if isinstance(value, float):
-            lines.append(f"  {label:<{label_width}}  {value:>7.3f}")
-    lines.append("")
+    if include_numbers:
+        # ── Key metrics (aligned table) ───────────────────────────────
+        key_metrics = [
+            ("Word2Vec similarity", "word2vec_1_all_sent"),
+            ("LSA similarity", "lsa_1_all_sent"),
+            ("Connectives", "all_connective"),
+            ("Argument overlap", "adjacent_overlap_binary_argument_sent"),
+            ("Noun overlap", "adjacent_overlap_binary_noun_sent"),
+            ("Noun TTR", "noun_ttr"),
+            ("Content TTR", "content_ttr"),
+            ("Repeated lemmas", "repeated_content_lemmas"),
+            ("Synonym overlap", "syn_overlap_sent_noun"),
+        ]
+        label_width = max(len(label) for label, _ in key_metrics)
+        for label, full in key_metrics:
+            value = metrics.get(full)
+            if isinstance(value, float):
+                lines.append(f"  {label:<{label_width}}  {value:>7.3f}")
+        lines.append("")
 
     # ── Matched signatures ────────────────────────────────────────────
     if matched:
         for sig in matched:
-            sev = "🔴" if sig.severity == "high" else "🟡" if sig.severity == "medium" else "⚪"
+            sev = (
+                "🔴"
+                if sig.severity == "high"
+                else "🟡"
+                if sig.severity == "medium"
+                else "⚪"
+            )
             lines.append(f"{sev} {sig.title}")
             lines.append(f"  {sig.description}")
             lines.append("")
-            # Align rule table
-            rule_label_w = max((len(r.metric) for r in sig.rules), default=0)
-            for rule in sig.rules:
-                actual = "  —  " if rule.actual is None else f"{rule.actual:.3f}"
-                mark = "✓" if rule.passed else "·"
-                lines.append(
-                    f"    {mark} {rule.metric:<{rule_label_w}}  {rule.op:>2} {rule.expected:.3f}  →  {actual}"
-                )
-            lines.append("")
+            if include_numbers:
+                # Align rule table
+                rule_label_w = max((len(r.metric) for r in sig.rules), default=0)
+                for rule in sig.rules:
+                    actual = "  —  " if rule.actual is None else f"{rule.actual:.3f}"
+                    mark = "✓" if rule.passed else "·"
+                    lines.append(
+                        f"    {mark} {rule.metric:<{rule_label_w}}  {rule.op:>2} {rule.expected:.3f}  →  {actual}"
+                    )
+                lines.append("")
 
         # ── Fixes ─────────────────────────────────────────────────────
         fixes: list[str] = []

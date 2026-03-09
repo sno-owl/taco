@@ -12,35 +12,35 @@
         {
           "metric": "noun_ttr",
           "operator": ">=",
-          "value": 0.8,
+          "value": 0.643,
           "why": "Most nouns are one-off terms, which suggests topic churn rather than progressive explanation.",
           "fix": "Reuse 3-5 anchor nouns across neighboring sentences so each paragraph develops stable concepts."
         },
         {
           "metric": "content_ttr",
           "operator": ">=",
-          "value": 0.8,
+          "value": 0.605,
           "why": "Content vocabulary is highly novel sentence to sentence, often seen in polished-sounding but thin text.",
           "fix": "Consolidate terminology and remove near-synonymous buzzwords that do not add new meaning."
         },
         {
           "metric": "adjacent_overlap_binary_noun_sent",
           "operator": "<=",
-          "value": 0.05,
+          "value": 0.222,
           "why": "Adjacent sentences rarely share noun concepts, indicating poor local chaining.",
           "fix": "Add explicit cross-sentence bridges by repeating key entities and referring back to prior claims."
         },
         {
           "metric": "repeated_content_lemmas",
           "operator": "<=",
-          "value": 0.2,
+          "value": 0.275,
           "why": "Core content terms are not repeated enough to form a coherent thread.",
           "fix": "Revisit each section and deliberately restate central terms when introducing implications or constraints."
         },
         {
           "metric": "syn_overlap_sent_noun",
           "operator": "<=",
-          "value": 0.1,
+          "value": 0.306,
           "why": "Even synonym-level noun continuity is low, reinforcing the sparse cohesion signal.",
           "fix": "Keep semantic neighborhoods tight: define canonical terms and avoid constant conceptual relabeling."
         }
@@ -56,14 +56,14 @@
         {
           "metric": "all_connective",
           "operator": "<=",
-          "value": 0.015,
+          "value": 0.057,
           "why": "Low connective density often indicates isolated assertions instead of reasoned progression.",
           "fix": "Introduce explicit causal and contrastive relations (because, therefore, however, for example)."
         },
         {
           "metric": "word2vec_1_all_sent",
           "operator": "<=",
-          "value": 0.35,
+          "value": 0.748,
           "why": "Adjacent sentences have low semantic continuity in vector space.",
           "fix": "Rewrite transitions so each sentence explicitly builds on the previous sentence's meaning."
         },
@@ -86,30 +86,120 @@
         {
           "metric": "word2vec_1_all_sent",
           "operator": ">=",
-          "value": 0.7,
+          "value": 0.861,
           "why": "Global semantic vectors appear coherent.",
           "fix": "Pair high-level abstraction with concrete repeated entities, constraints, and examples."
         },
         {
           "metric": "noun_ttr",
           "operator": ">=",
-          "value": 0.7,
+          "value": 0.49,
           "why": "Noun inventory is too novel for stable explanatory prose.",
           "fix": "Reduce conceptual churn by defining a glossary and sticking to canonical nouns."
         },
         {
           "metric": "adjacent_overlap_binary_noun_sent",
           "operator": "<=",
-          "value": 0.1,
+          "value": 0.5,
           "why": "Local noun overlap is too weak for coherent paragraph flow.",
           "fix": "Use sentence openers that reference the previous sentence's main entity."
         },
         {
           "metric": "repeated_content_lemmas",
           "operator": "<=",
-          "value": 0.25,
+          "value": 0.343,
           "why": "Low recurrence of content lemmas signals weak thematic anchoring.",
           "fix": "Reinforce recurring claims with repeated terminology and explicit definitions."
+        }
+      ]
+    },
+    {
+      "id": "logic_gap_low_link_low_entity_carry_v1",
+      "title": "Logic gap with weak entity carryover",
+      "severity": "high",
+      "logic": "all",
+      "description": "The text uses few explicit logical links, weakly carries entities between sentences, and has low semantic adjacency.",
+      "rules": [
+        {
+          "metric": "all_connective",
+          "operator": "<=",
+          "value": 0.057,
+          "why": "Connective density is in the low tail, suggesting weak explicit reasoning links.",
+          "fix": "Add causal, contrastive, and exemplifying connectors to make the argument chain explicit."
+        },
+        {
+          "metric": "adjacent_overlap_binary_argument_sent",
+          "operator": "<=",
+          "value": 0.526,
+          "why": "Arguments are not consistently sustained across adjacent sentences.",
+          "fix": "Carry the same actors and objects through 2-3 consecutive sentences before introducing new ones."
+        },
+        {
+          "metric": "lsa_1_all_sent",
+          "operator": "<=",
+          "value": 0.339,
+          "why": "Adjacent sentence semantics are weakly aligned in LSA space.",
+          "fix": "Reorder or rewrite sentences so each one directly elaborates the previous claim."
+        }
+      ]
+    },
+    {
+      "id": "novelty_burst_without_logic_links_v1",
+      "title": "Novelty burst without logic links",
+      "severity": "high",
+      "logic": "all",
+      "description": "The text introduces unusually novel lexical content while under-signaling logical relations.",
+      "rules": [
+        {
+          "metric": "noun_ttr",
+          "operator": ">=",
+          "value": 0.643,
+          "why": "Noun novelty is in the high tail, indicating rapid concept turnover.",
+          "fix": "Reuse canonical nouns and reduce one-off concept labels across nearby sentences."
+        },
+        {
+          "metric": "content_ttr",
+          "operator": ">=",
+          "value": 0.605,
+          "why": "Content-word novelty is also in the high tail.",
+          "fix": "Consolidate terminology and replace near-synonymous variants with stable terms."
+        },
+        {
+          "metric": "all_connective",
+          "operator": "<=",
+          "value": 0.057,
+          "why": "Low logical connective use makes the novelty feel ungrounded.",
+          "fix": "Insert explicit discourse links (because, therefore, however, for example) between claims."
+        }
+      ]
+    },
+    {
+      "id": "lexical_orphan_chain_v1",
+      "title": "Lexical orphan chain",
+      "severity": "medium",
+      "logic": "all",
+      "description": "Adjacent sentences fail to maintain noun and argument continuity while core content terms rarely recur.",
+      "rules": [
+        {
+          "metric": "adjacent_overlap_binary_noun_sent",
+          "operator": "<=",
+          "value": 0.222,
+          "why": "Noun concepts are weakly chained sentence to sentence.",
+          "fix": "Open sentences by explicitly referencing the prior sentence's main entities."
+        },
+        {
+          "metric": "repeated_content_lemmas",
+          "operator": "<=",
+          "value": 0.275,
+          "why": "Content lemmas recur too little to anchor topic development.",
+          "fix": "Repeat core lemmas when shifting from definition to implication or constraint."
+        },
+        {
+          "metric": "adjacent_overlap_binary_argument_sent",
+          "operator": "<=",
+          "value": 0.526,
+          "why": "Argument carriers are not preserved across adjacent sentences.",
+          "fix": "Sustain the same subject-object frame across neighboring sentences before branching."
         }
       ]
     }
